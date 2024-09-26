@@ -1,5 +1,20 @@
 # Tin-Gate WiFi Deauthentication Tool
 
+{GOLD}╔════════════════════╗{RESET}
+{RED} ╔═╝  ▄▄▄▄▄▄    ▄▄▄▄▄▄  ╚═╗ {RESET}
+{RED}╔╝ ▐██████████████████▌  ╚╗ {RESET}
+{RED}║ ▐█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█▌ ║ {RESET}
+{RED}║ ▐█  ████ ▄█  ██▀  ██ █▌ ║ {RESET}
+{RED}║ ▐█   ▀█▀ ██ ▐█▀█▄ ██ █▌ ║ {RESET}
+{RED}║ ▐█    █  ██ ▐█ ▀█ ██ █▌ ║ {RESET}
+{RED}║ ▐█    █  ██ ▐█  █ ██ █▌ ║ {RESET}
+{RED}║ ▐█    █  ▀█▄ ▀█▄▀ ██ █▌ ║ {RESET}
+{RED}║ ▐█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█▌ ║ {RESET}
+{RED}╚╗ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀ ╔╝ {RESET}
+{GOLD} ╚═╗     TIN -GATE    ╔═╝ {RESET}
+{GOLD}   ╚════════════════════╝{RESET}
+
+## Description
 Welcome to **Tin-Gate**, a powerful WiFi deauthentication tool designed for security professionals and ethical hackers. This tool utilizes deauthentication packets to force devices off a network, allowing you to discover hidden targets and test the security of WiFi networks.
 
 ## Table of Contents
