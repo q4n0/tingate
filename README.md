@@ -6,7 +6,7 @@ Welcome to **Tin-Gate**, a powerful WiFi deauthentication tool designed for secu
 
 - [Features](#features)
 - [Requirements](#requirements)
-- [Installation](#installation)
+- [Installation READ CAREFULLY!!](#installation)
 - [Usage](#usage)
 - [Disclaimer](#disclaimer)
 - [Author](#author)
