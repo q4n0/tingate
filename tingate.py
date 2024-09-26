@@ -67,7 +67,7 @@ def print_banner():
 {RED}║ ▐█    █  ▀█▄ ▀█▄▀ ██ █▌ ║ {RESET}
 {RED}║ ▐█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█▌ ║ {RESET}
 {RED}╚╗ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀ ╔╝ {RESET}
-{GOLD} ╚═╗     TIN -GATE    ╔═╝ {RESET}
+{GOLD} ╚═╗     TINGATE     ╔═╝ {RESET}
 {GOLD}   ╚════════════════════╝{RESET}
 """
     print(banner)
