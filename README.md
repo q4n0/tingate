@@ -6,7 +6,7 @@ Welcome to **Tin-Gate**, a powerful WiFi deauthentication tool designed for secu
 
 - [Features](#features)
 - [Requirements](#requirements)
-- [Installation READ CAREFULLY!!](#installation)
+- [Installation](#installation)
 - [Usage](#usage)
 - [Disclaimer](#disclaimer)
 - [Author](#author)
@@ -28,7 +28,9 @@ This tool requires Python 3 and the following libraries:
 
 You can install these libraries using the `requirements.txt` file.
 
-## Installation READ CAREFULLY!!
+## Installation
+
+READ CAREFULLY!!
 
 Clone the repository:
 
