@@ -57,9 +57,9 @@ Disclaimer
 This tool is intended for educational and ethical hacking purposes only. The author is not responsible for any misuse or illegal activities performed using this tool. Always obtain permission before conducting any network security assessments.
 
 This project is unlicensed and comes under no warranty and .
-Author
-b0urn3
-Instagram: @onlybyhive
-GitHub: q4n0
+## Author
+>> b0urn3
+>> Instagram: @onlybyhive
+>> GitHub: q4n0
 
 ## “The night is darkest just before the dawn.” – The Dark Knight
