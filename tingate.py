@@ -76,19 +76,19 @@ def loader():
 def print_banner():
     """Display the ASCII art banner."""
     banner = f"""
-{GOLD}╔════════════════════╗{RESET}
+{GOLD}  ╔════════════════════╗{RESET}
 {RED} ╔═╝  ▄▄▄▄▄▄    ▄▄▄▄▄▄  ╚═╗ {RESET}
-{RED}╔╝ ▐██████████████████▌  ╚╗ {RESET}
-{RED}║ ▐█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█▌ ║ {RESET}
-{RED}║ ▐█  ████ ▄█  ██▀  ██ █▌ ║ {RESET}
-{RED}║ ▐█   ▀█▀ ██ ▐█▀█▄ ██ █▌ ║ {RESET}
-{RED}║ ▐█    █  ██ ▐█ ▀█ ██ █▌ ║ {RESET}
-{RED}║ ▐█    █  ██ ▐█  █ ██ █▌ ║ {RESET}
-{RED}║ ▐█    █  ▀█▄ ▀█▄▀ ██ █▌ ║ {RESET}
-{RED}║ ▐█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█▌ ║ {RESET}
-{RED}╚╗ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀ ╔╝ {RESET}
-{GOLD} ╚═╗     TINGATE     ╔═╝ {RESET}
-{GOLD}   ╚════════════════════╝{RESET}
+{RED}╔╝ ▐██████████████████▌   ╚╗ {RESET}
+{RED}║ ▐█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█▌   ║ {RESET}
+{RED}║ ▐█  ████ ▄█  ██▀  ██ █▌  ║ {RESET}
+{RED}║ ▐█   ▀█▀ ██ ▐█▀█▄ ██ █▌  ║ {RESET}
+{RED}║ ▐█    █  ██ ▐█ ▀█ ██ █▌  ║ {RESET}
+{RED}║ ▐█    █  ██ ▐█  █ ██ █▌  ║ {RESET}
+{RED}║ ▐█    █  ▀█▄ ▀█▄▀ ██ █▌  ║ {RESET}
+{RED}║ ▐█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█▌   ║ {RESET}
+{RED}╚╗ ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀   ╔╝ {RESET}
+{GOLD} ╚═╗     TINGATE       ╔═╝ {RESET}
+{GOLD}   ╚═══════════════════╝{RESET}
 """
     print(banner)
 
@@ -109,7 +109,7 @@ def perform_arp_scan(interface):
 
 def mdns_scan(interface):
     """Performing mDNS scan to discover devices."""
-    print(f"{GOLD}Starting mDNS scan on {interface},please wait...{RESET}")
+    print(f"{GOLD}Starting mDNS scan on {interface}, please wait...{RESET}")
 
     # Create a multicast mDNS packet
     packet = Ether(dst="ff:ff:ff:ff:ff:ff") / IP(dst="224.0.0.251") / UDP(sport=5353, dport=5353) / DNS(
@@ -129,11 +129,40 @@ def mdns_scan(interface):
 
     return mdns_devices
 
-def scan_for_devices(interface):
-    """Perform combined ARP scan and mDNS scan."""
-    print(f"{GOLD}Performing target scan on {interface},please wait...{RESET}")
+def ping_sweep(ip_range):
+    """Perform a ping sweep across the given IP range to discover active devices."""
+    active_ips = {}
+    print(f"{GOLD}Performing ping sweep on IP range {ip_range}...{RESET}")
+    
+    # Ping every IP in the range
+    for i in range(1, 255):
+        ip = f"{ip_range}.{i}"
+        try:
+            response = ping(ip, count=1, timeout=1)
+            if response.success():
+                print(f"{GRAY}Device found: {ip}{RESET}")
+                active_ips[ip] = None  # Placeholder for MAC address, we'll get it later
+        except Exception as e:
+            print(f"{RED}Error pinging {ip}: {e}{RESET}")
+    
+    return active_ips
 
-    # Initial ARP scan
+def get_mac_from_ip(interface, ip_address):
+    """Get the MAC address corresponding to an IP address using ARP."""
+    arp_request = ARP(pdst=ip_address)
+    broadcast = Ether(dst="ff:ff:ff:ff:ff:ff")
+    arp_request_broadcast = broadcast / arp_request
+    answered_list = srp(arp_request_broadcast, iface=interface, timeout=2, verbose=False)[0]
+    
+    if answered_list:
+        return answered_list[0][1].hwsrc  # Return MAC address
+    return None
+
+def scan_for_devices(interface):
+    """Perform combined ARP scan, mDNS scan, and Ping sweep."""
+    print(f"{GOLD}Performing target scan on {interface}, please wait...{RESET}")
+
+    # Perform ARP scan
     arp_devices = perform_arp_scan(interface)
     print(f"{GOLD}Initial ARP scan detected {len(arp_devices)} devices.{RESET}")
 
@@ -141,8 +170,20 @@ def scan_for_devices(interface):
     mdns_devices = mdns_scan(interface)
     print(f"{GOLD}mDNS scan detected {len(mdns_devices)} devices.{RESET}")
 
-    # Combine detected devices
-    combined_devices = {**arp_devices, **mdns_devices}
+    # Perform ping sweep
+    ip_range = get_if_addr(interface).rsplit('.', 1)[0]  # Extract network part of IP (e.g., 192.168.1)
+    ping_devices = ping_sweep(ip_range)
+
+    # Get MAC addresses for the devices found via ping
+    for ip in ping_devices.keys():
+        mac = get_mac_from_ip(interface, ip)
+        if mac:
+            ping_devices[ip] = mac
+        else:
+            print(f"{RED}Could not resolve MAC for {ip}{RESET}")
+
+    # Combine all detected devices
+    combined_devices = {**arp_devices, **mdns_devices, **ping_devices}
 
     print(f"{GOLD}Final targets detected on this network:{RESET}")
     for ip, mac in combined_devices.items():
@@ -156,7 +197,7 @@ def main():
     print(f"{GOLD}Welcome to Tin-Gate WiFi deauth-attack Tool for hackers by a Hacker{RESET}")
     print(f"{GRAY}“The night is darkest just before the dawn.”{RESET} – {RED}The Dark Knight{RESET}")
     print(f"{GRAY}Scripted by b0urn3 IG: onlybyhive Github: q4n0{RESET}\n")
-    
+
     # Get Interfaces
     interfaces = get_if_list()
     print(f"{GOLD}Available interfaces:{RESET}")
@@ -175,14 +216,12 @@ def main():
 
     interface = interfaces[choice]
 
-    # Check and enable monitor mode if necessary
+    # Check if monitor mode is enabled
     if not check_monitor_mode(interface):
         enable_monitor_mode(interface)
 
-    # Scan for devices
     devices = scan_for_devices(interface)
 
-    # Live attack (if any devices were found)
     if devices:
         target_macs = list(devices.values())
         access_point_mac = target_macs[0]  # Simplified for this demo, could be user-input
